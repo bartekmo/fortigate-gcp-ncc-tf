@@ -1,0 +1,14 @@
+gcloud compute routers add-interface ${CR_NAME} \
+  --interface-name=${CR_NAME}-nic0 \
+  --subnetwork=${SUBNET_NAME} \
+  --region=${REGION} \
+  --ip-address=${IP_NIC0} \
+  --project=${PROJECT}
+
+gcloud compute routers add-interface ${CR_NAME} \
+  --interface-name=${CR_NAME}-nic1 \
+  --subnetwork=${SUBNET_NAME} \
+  --region=${REGION} \
+  --ip-address=${IP_NIC1} \
+  --project=${PROJECT} \
+  --redundant-interface=${CR_NAME}-nic0

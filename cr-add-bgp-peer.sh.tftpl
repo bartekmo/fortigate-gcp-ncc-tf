@@ -1,0 +1,19 @@
+gcloud compute routers add-bgp-peer ${cr_name} \
+  --peer-name=${fgt_name}-nic0 \
+  --interface=${cr_name}-nic0 \
+  --peer-ip-address=${fgt_address} \
+  --peer-asn=${fgt_asn} \
+  --instance=${fgt_name} \
+  --instance-zone=${fgt_zone} \
+  --region=${region} \
+  --project=${project}
+
+gcloud compute routers add-bgp-peer ${cr_name} \
+  --peer-name=${fgt_name}-nic1 \
+  --interface=${cr_name}-nic1 \
+  --peer-ip-address=${fgt_address} \
+  --peer-asn=${fgt_asn} \
+  --instance=${fgt_name} \
+  --instance-zone=${fgt_zone} \
+  --region=${region} \
+  --project=${project}
