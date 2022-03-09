@@ -1,5 +1,7 @@
 # fortigate-gcp-ncc-tf
 
+![Concept diagram](fgt-ncc-singlespoke-overview.png)
+
 ## TODO:
 - multiple gates
 - connect to FMG (or use autoscaling?)
