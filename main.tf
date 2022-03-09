@@ -68,6 +68,16 @@ resource "google_compute_firewall" "allow-admin" {
   }
 }
 
+resource "google_compute_firewall" "allow_in" {
+  name                   = "${var.prefix}-fw-allow-all-in"
+  network                = google_compute_network.hub.self_link
+  source_ranges          = ["0.0.0.0/0"]
+
+  allow {
+    protocol             = "all"
+  }
+}
+
 resource "google_compute_address" "cr_nic0" {
   name = "${var.prefix}-addr-cr-nic0"
   address_type = "INTERNAL"
@@ -78,6 +88,12 @@ resource "google_compute_address" "cr_nic1" {
   name = "${var.prefix}-addr-cr-nic1"
   address_type = "INTERNAL"
   subnetwork = google_compute_subnetwork.hub.self_link
+}
+
+resource "google_compute_address" "elb_pub" {
+  name = "${var.prefix}-eip-elb"
+  address_type = "EXTERNAL"
+  project = var.project
 }
 
 resource "google_compute_address" "fgt_priv" {
@@ -138,7 +154,9 @@ resource "google_compute_instance" "fgt_vms" {
         ncc_asn          = var.ncc_asn
         cr_nic0          = google_compute_address.cr_nic0.address
         cr_nic1          = google_compute_address.cr_nic1.address
-        elb_pub = "1.2.3.4"
+        elb_pub          = google_compute_address.elb_pub.address
+        fmg_serial       = var.fmg_serial
+        fmg_ip           = var.fmg_ip
       }
     )
     license              = fileexists(var.license_files[count.index]) ? file(var.license_files[count.index]) : null
@@ -153,12 +171,62 @@ resource "google_compute_instance" "fgt_vms" {
   }
 }
 
+
+## ELB resources
+resource "google_compute_region_health_check" "health_check" {
+  name                   = "${var.prefix}healthcheck-http${var.healthcheck_port}-${local.region_short}"
+  region                 = var.region
+  timeout_sec            = 2
+  check_interval_sec     = 2
+
+  http_health_check {
+    port                 = var.healthcheck_port
+  }
+}
+
+resource "google_compute_instance_group" "fgt_umigs" {
+  count                  = var.cnt
+
+  name                   = "${var.prefix}umig${count.index}-${local.zones_short[count.index]}"
+  zone                   = google_compute_instance.fgt_vms[count.index].zone
+  instances              = [google_compute_instance.fgt_vms[count.index].self_link]
+}
+
+resource "google_compute_forwarding_rule" "elb_frule" {
+  name = "${var.prefix}-fwd-elb"
+  region = var.region
+  ip_address = google_compute_address.elb_pub.self_link
+  ip_protocol = "L3_DEFAULT"
+  all_ports = true
+  load_balancing_scheme = "EXTERNAL"
+  backend_service = google_compute_region_backend_service.elb_bes.self_link
+}
+
+resource "google_compute_region_backend_service" "elb_bes" {
+  name = "${var.prefix}-bes-elb-${local.region_short}"
+  region = var.region
+  load_balancing_scheme = "EXTERNAL"
+  protocol = "UNSPECIFIED"
+
+  dynamic "backend" {
+    for_each = google_compute_instance_group.fgt_umigs[*].self_link
+    content {
+      group = backend.value
+    }
+  }
+  health_checks = [google_compute_region_health_check.health_check.self_link]
+}
+
+
 resource "google_compute_router" "this" {
   name = "${var.prefix}-cr-${local.region_short}"
   network = google_compute_network.hub.self_link
   bgp {
     asn = var.ncc_asn
-    advertise_mode = "DEFAULT"
+    advertise_mode = "CUSTOM"
+    advertised_groups = [
+      "ALL_SUBNETS"
+    ]
   }
 }
 
@@ -171,10 +239,14 @@ resource "google_network_connectivity_spoke" "this" {
   name = "${var.prefix}-spoke-${var.region}"
   location = var.region
   hub = google_network_connectivity_hub.this.id
+
   linked_router_appliance_instances {
-    instances {
-      virtual_machine = google_compute_instance.fgt_vms[0].self_link
-      ip_address = google_compute_address.fgt_priv[0].address
+    dynamic "instances" {
+      for_each = range(var.cnt)
+      content {
+        virtual_machine = google_compute_instance.fgt_vms[instances.key].self_link
+        ip_address = google_compute_address.fgt_priv[instances.key].address
+      }
     }
     site_to_site_data_transfer = false
   }

@@ -1,3 +1,4 @@
+sleep 10
 gcloud compute routers add-bgp-peer ${cr_name} \
   --peer-name=${fgt_name}-nic0 \
   --interface=${cr_name}-nic0 \

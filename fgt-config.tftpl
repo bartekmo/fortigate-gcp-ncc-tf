@@ -16,13 +16,14 @@ config system interface
   edit port1
     set mode static
     set ip ${port1_addr}/32
+    set allowaccess fgfm https ssh
     set secondary-IP enable
-#    config secondaryip
-#      edit 1
-#      set ip ${elb_pub} 255.255.255.255
-#      set allowaccess probe-response
-#      next
-#    end
+    config secondaryip
+      edit 1
+      set ip ${elb_pub} 255.255.255.255
+      set allowaccess probe-response
+      next
+    end
   next
 end
 config router static
@@ -47,3 +48,11 @@ config router bgp
     next
   end
 end
+
+%{ if fmg_ip != null }
+config system central-management
+  set type fortimanager
+  set fmg ${fmg_ip}
+  set serial-number ${fmg_serial}
+end
+%{ endif }
