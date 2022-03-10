@@ -66,3 +66,16 @@ variable "fmg_serial" {
   type = string
   default = null
 }
+
+variable "hub_cidr_range" {
+  type = string
+  default = "172.20.0.0/24"
+}
+
+variable "wrkld_vpcs" {
+  type = list(object({
+   name = string
+   project = string
+  }))
+  default = []
+}

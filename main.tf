@@ -37,7 +37,7 @@ resource "google_compute_subnetwork" "hub" {
   name = "${var.prefix}-sb-hub-${local.region_short}"
   network = google_compute_network.hub.self_link
   region = var.region
-  ip_cidr_range = "172.20.0.0/24"
+  ip_cidr_range = var.hub_cidr_range
 }
 
 resource "google_compute_route" "fgt_out" {
@@ -227,6 +227,13 @@ resource "google_compute_router" "this" {
     advertised_groups = [
       "ALL_SUBNETS"
     ]
+    dynamic "advertised_ip_ranges" {
+      for_each = local.wrkld_cidr_ranges
+      
+      content {
+        range = advertised_ip_ranges.key
+      }
+    }
   }
 }
 
