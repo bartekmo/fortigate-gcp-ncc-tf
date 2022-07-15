@@ -37,5 +37,5 @@ If you want to help in getting the provider updated fee free to vote for the iss
 - [x] connect to FMG (or use autoscaling?)
 - [x] add ELB
 - [x] add peering to pre-existing workload VPCs
-- [ ] move to single managed group instead of zonal UMIGs (?)
+- [ ] consider moving to single managed group instead of zonal UMIGs (BYOL licensing issues?)
 - [ ] re-write as a day1 module for fgt ref architecture
