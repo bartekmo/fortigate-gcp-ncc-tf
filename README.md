@@ -29,9 +29,13 @@ This template uses terraform null resources as a workaround for missing capabili
 
 If you want to help in getting the provider updated fee free to vote for the issue [here](https://github.com/hashicorp/terraform-provider-google/issues/11206)
 
+## Known issues
+- Common errors during deployment due to peering operations competing for exclusive lock with each other and with other routing-related operations. Simply re-run `terraform apply` to finish deployment or use `-parallelism=1` option (will make your deployment run much slower).
+
 ## TODO:
 - [x] multiple gates
 - [x] connect to FMG (or use autoscaling?)
 - [x] add ELB
 - [x] add peering to pre-existing workload VPCs
+- [ ] move to single managed group instead of zonal UMIGs (?)
 - [ ] re-write as a day1 module for fgt ref architecture
