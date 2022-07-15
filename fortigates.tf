@@ -1,6 +1,6 @@
 data "google_compute_image" "fgt_image" {
   project                = "fortigcp-project-001"
-  family                 = "fortigate-70-byol"
+  family                 = var.fgt_firmware_family
 }
 
 resource "google_compute_address" "fgt_priv" {

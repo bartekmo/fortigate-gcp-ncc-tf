@@ -76,7 +76,7 @@ resource "null_resource" "ncc_interfaces" {
   }
 }
 
-
+/*
 resource "null_resource" "bgp_peers" {
   count = var.cnt
 
@@ -95,6 +95,41 @@ resource "null_resource" "bgp_peers" {
         project = var.project
       }
     )
+  }
+  provisioner "local-exec" {
+    command = self.triggers.create
+  }
+}
+*/
+resource "null_resource" "bgp_peers" {
+  depends_on = [
+    null_resource.ncc_interfaces,
+    google_compute_network_peering.spoke_to_hub
+  ]
+  triggers = {
+    create = join( "", [
+      for i in range(var.cnt) : <<EOF
+      gcloud compute routers add-bgp-peer ${google_compute_router.this.name} \
+        --peer-name=${google_compute_instance.fgt_vms[i].name}-nic0 \
+        --interface=${google_compute_router.this.name}-nic0 \
+        --peer-ip-address=${google_compute_address.fgt_priv[i].address} \
+        --peer-asn=${var.fgt_asn} \
+        --instance=${google_compute_instance.fgt_vms[i].name} \
+        --instance-zone=${google_compute_instance.fgt_vms[i].zone} \
+        --region=${var.region} \
+        --project=${var.project}
+
+      gcloud compute routers add-bgp-peer ${google_compute_router.this.name} \
+        --peer-name=${google_compute_instance.fgt_vms[i].name}-nic1 \
+        --interface=${google_compute_router.this.name}-nic1 \
+        --peer-ip-address=${google_compute_address.fgt_priv[i].address} \
+        --peer-asn=${var.fgt_asn} \
+        --instance=${google_compute_instance.fgt_vms[i].name} \
+        --instance-zone=${google_compute_instance.fgt_vms[i].zone} \
+        --region=${var.region} \
+        --project=${var.project}
+EOF
+    ])
   }
   provisioner "local-exec" {
     command = self.triggers.create
