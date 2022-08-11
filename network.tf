@@ -15,18 +15,20 @@ resource "google_compute_route" "fgt_out" {
   name       = "${var.prefix}-rt-hub-fgt-default"
   dest_range = "0.0.0.0/0"
   network    = google_compute_network.hub.self_link
-  priority   = 90
+  priority   = 10
   next_hop_gateway = "default-internet-gateway"
   tags = ["fgt"]
 }
 
-resource "google_compute_route" "default_out" {
-  name       = "${var.prefix}-rt-hub-default"
-  dest_range = "0.0.0.0/0"
-  network    = google_compute_network.hub.self_link
-  priority   = 900
-  next_hop_instance = google_compute_instance.fgt_vms[0].self_link
-}
+## replaced by BGP advertisement from FGT
+#
+#resource "google_compute_route" "default_out" {
+#  name       = "${var.prefix}-rt-hub-default"
+#  dest_range = "0.0.0.0/0"
+#  network    = google_compute_network.hub.self_link
+#  priority   = 900
+#  next_hop_instance = google_compute_instance.fgt_vms[0].self_link
+#}
 
 resource "google_compute_firewall" "allow-admin" {
   name                   = "${var.prefix}-fw-allow-admin"
