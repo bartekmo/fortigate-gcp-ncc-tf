@@ -6,7 +6,8 @@ gcloud compute routers add-bgp-peer ${cr_name} \
   --instance=${fgt_name} \
   --instance-zone=${fgt_zone} \
   --region=${region} \
-  --project=${project}
+  --project=${project} \
+  --bfd-session-initialization-mode PASSIVE
 
 gcloud compute routers add-bgp-peer ${cr_name} \
   --peer-name=${fgt_name}-nic1 \
@@ -16,4 +17,5 @@ gcloud compute routers add-bgp-peer ${cr_name} \
   --instance=${fgt_name} \
   --instance-zone=${fgt_zone} \
   --region=${region} \
-  --project=${project}
+  --project=${project} \
+  --bfd-session-initialization-mode PASSIVE
