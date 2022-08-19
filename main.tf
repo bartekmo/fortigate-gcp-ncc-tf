@@ -21,6 +21,37 @@ locals {
     replace( replace( replace( replace(local.zones[1], "europe-", "eu"), "australia", "au" ), "northamerica", "na"), "southamerica", "sa")
   ]
   regions_short = [ for region in var.regions: replace( replace( replace( replace( replace(region, "us-", "us"), "europe-", "eu"), "australia-", "au" ), "northamerica-", "na"), "southamerica-", "sa")]
+<<<<<<< HEAD
+=======
+}
+
+module "region" {
+  for_each = toset(var.regions)
+  source = "./region"
+
+  prefix = var.prefix
+  region = each.value
+  region_short = local.regions_short[ index(var.regions, each.value)]
+  ip_cidr_range = cidrsubnet( var.hub_cidr_range, var.hub_subnet_bitmask, index(var.regions, each.value))
+  hub_vpc_url = google_compute_network.hub.self_link
+  fgt_asn = var.fgt_asn
+  ncc_hub_id = google_network_connectivity_hub.this.id
+  project = var.project
+  cnt = var.cnt
+
+  depends_on = [
+    google_compute_network_peering.spoke_to_hub
+  ]
+}
+
+module "branches" {
+  count = var.branch_cnt
+  source = "./branch"
+
+  prefix = "${var.prefix}-branch${count.index}"
+  region = each.value
+  ip_cidr_range = "192.168.${count.index}.0/24"
+>>>>>>> 4e92cec94c695355e8af5a2fd677a114ed51f58a
 }
 
 module "region" {
