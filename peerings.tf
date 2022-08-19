@@ -21,6 +21,7 @@ resource "google_compute_network_peering" "hub_to_spoke" {
   peer_network         = data.google_compute_network.spokes[count.index].id
   export_custom_routes = true
   depends_on           = [
+    google_compute_route.fgt_out
 # TODO: dependencies within a series of spokes
   ]
 }

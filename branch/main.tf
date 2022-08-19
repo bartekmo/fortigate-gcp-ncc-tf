@@ -1,0 +1,7 @@
+VPC
+
+subnet
+
+fgt
+
+client
