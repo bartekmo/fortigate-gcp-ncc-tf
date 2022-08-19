@@ -3,18 +3,24 @@ data "google_compute_image" "fgt_image" {
   family                 = var.fgt_firmware_family
 }
 
+data "google_compute_default_service_account" "default" {
+  #project      = var.project
+}
+
 resource "google_compute_address" "fgt_priv" {
   count                  = var.cnt
-  name                   = "${var.prefix}-addr-fgt${count.index+1}"
+  name                   = "${var.prefix}-addr-fgt${count.index+1}-${local.zones_short[count.index]}"
   address_type           = "INTERNAL"
-  subnetwork             = google_compute_subnetwork.hub.self_link
+  subnetwork             = google_compute_subnetwork.spoke.self_link
+  region                 = var.region
 }
 
 resource "google_compute_address" "fgt_pub" {
   count                  = var.cnt
-  name                   = "${var.prefix}-eip-fgt${count.index+1}"
+  name                   = "${var.prefix}-eip-fgt${count.index+1}-${local.zones_short[count.index]}"
   address_type           = "EXTERNAL"
-  project                = var.project
+  region                 = var.region
+  #project                = var.project
 }
 
 resource "google_compute_disk" "logdisks" {
@@ -24,7 +30,7 @@ resource "google_compute_disk" "logdisks" {
   size                   = 30
   type                   = "pd-ssd"
   zone                   = local.zones[count.index]
-  project                = var.project
+  #project                = var.project
 }
 
 resource "google_compute_instance" "fgt_vms" {
@@ -51,12 +57,12 @@ resource "google_compute_instance" "fgt_vms" {
   }
 
   metadata = {
-    user-data            = templatefile( "fgt-config.tftpl",
+    user-data            = templatefile( "${path.module}/fgt-config.tftpl",
       {
         hostname = "${var.prefix}vm-fgt${count.index+1}-${local.zones_short[count.index]}"
         healthcheck_port = var.healthcheck_port
         port1_addr       = google_compute_address.fgt_priv[count.index].address
-        port1_gw         = google_compute_subnetwork.hub.gateway_address
+        port1_gw         = google_compute_subnetwork.spoke.gateway_address
         fgt_asn          = var.fgt_asn
         ncc_asn          = var.ncc_asn
         cr_nic0          = google_compute_address.cr_nic0.address
@@ -70,7 +76,7 @@ resource "google_compute_instance" "fgt_vms" {
   }
 
   network_interface {
-    subnetwork           = google_compute_subnetwork.hub.id
+    subnetwork           = google_compute_subnetwork.spoke.id
     network_ip           = google_compute_address.fgt_priv[count.index].address
     access_config {
       nat_ip             = google_compute_address.fgt_pub[count.index].address

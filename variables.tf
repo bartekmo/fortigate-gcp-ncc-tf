@@ -15,6 +15,12 @@ variable "region" {
   description = "Region to deploy to"
 }
 
+variable "regions" {
+  type = list(string)
+  default = ["europe-west3"]
+  description = "List of regions for NCC spokes"
+}
+
 variable "zones" {
   type = list(string)
   default = ["","",""]
@@ -83,8 +89,19 @@ variable "fmg_serial" {
 
 variable "hub_cidr_range" {
   type = string
-  default = "172.20.0.0/24"
+  default = "172.20.0.0/23"
   description = "CIDR to assign to regional subnet in NCC Hub VPC"
+}
+
+variable "hub_subnet_bitmask" {
+  type = number
+  default = 6
+  description = "Bitmask to skice the hub_cidr_range into regional subnets. /23 range and 6-bit mask makes enough space for 64 3-bit subnets"
+}
+
+variable "hub_cidr_ranges" {
+  type = list(string)
+  default = ["172.20.0.0/24", "172.20.1.0/24"]
 }
 
 variable "fgt_firmware_family" {

@@ -1,7 +1,8 @@
 resource "google_compute_address" "elb_pub" {
-  name                   = "${var.prefix}-eip-elb"
+  name                   = "${var.prefix}-eip-elb-${local.region_short}"
   address_type           = "EXTERNAL"
-  project                = var.project
+  region                 = var.region
+  #project                = var.project
 }
 
 resource "google_compute_region_health_check" "health_check" {
@@ -24,7 +25,7 @@ resource "google_compute_instance_group" "fgt_umigs" {
 }
 
 resource "google_compute_forwarding_rule" "elb_frule" {
-  name                   = "${var.prefix}-fwd-elb"
+  name                   = "${var.prefix}-fwd-elb-${local.region_short}"
   region                 = var.region
   ip_address             = google_compute_address.elb_pub.self_link
   ip_protocol            = "L3_DEFAULT"

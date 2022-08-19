@@ -1,15 +1,18 @@
 resource "google_compute_network" "hub" {
   name = "${var.prefix}-vpc-hub"
   auto_create_subnetworks = false
+  delete_default_routes_on_create = true
   project = var.project
 }
 
-resource "google_compute_subnetwork" "hub" {
-  name = "${var.prefix}-sb-hub-${local.region_short}"
-  network = google_compute_network.hub.self_link
-  region = var.region
-  ip_cidr_range = var.hub_cidr_range
-}
+#resource "google_compute_subnetwork" "spokes" {
+#  for_each = toset(var.regions)
+
+#  name = "${var.prefix}-sb-hub-${local.regions_short[ index(var.regions, each.value)]}"
+#  network = google_compute_network.hub.self_link
+#  region = each.value
+#  ip_cidr_range = cidrsubnet( var.hub_cidr_range, var.hub_subnet_bitmask, index(var.regions, each.value))
+#}
 
 resource "google_compute_route" "fgt_out" {
   name       = "${var.prefix}-rt-hub-fgt-default"
